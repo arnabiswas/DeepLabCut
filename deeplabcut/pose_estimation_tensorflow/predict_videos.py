@@ -51,6 +51,7 @@ def analyze_videos(
     dynamic=(False, 0.5, 10),
     modelprefix="",
     c_engine=False,
+    flip_video=False,
     robust_nframes=False,
 ):
     """
@@ -318,6 +319,7 @@ def analyze_videos(
                     destfolder,
                     TFGPUinference,
                     dynamic,
+                    flip_video=flip_video,
                 )
 
         os.chdir(str(start_path))
@@ -366,7 +368,7 @@ def checkcropping(cfg, cap):
     return int(ny), int(nx)
 
 
-def GetPoseF(cfg, dlc_cfg, sess, inputs, outputs, cap, nframes, batchsize):
+def GetPoseF(cfg, dlc_cfg, sess, inputs, outputs, cap, nframes, batchsize, flip_video=False):
     """ Batchwise prediction of pose """
     PredictedData = np.zeros(
         (nframes, dlc_cfg["num_outputs"] * 3 * len(dlc_cfg["all_joints_names"]))
@@ -388,6 +390,10 @@ def GetPoseF(cfg, dlc_cfg, sess, inputs, outputs, cap, nframes, batchsize):
         if counter % step == 0:
             pbar.update(step)
         ret, frame = cap.read()
+
+        if flip_video:
+            frame = cv2.flip(frame, 0)
+
         if ret:
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             if cfg["cropping"]:
@@ -418,7 +424,7 @@ def GetPoseF(cfg, dlc_cfg, sess, inputs, outputs, cap, nframes, batchsize):
     return PredictedData, nframes
 
 
-def GetPoseS(cfg, dlc_cfg, sess, inputs, outputs, cap, nframes):
+def GetPoseS(cfg, dlc_cfg, sess, inputs, outputs, cap, nframes, flip_video=False):
     """ Non batch wise pose estimation for video cap."""
     if cfg["cropping"]:
         ny, nx = checkcropping(cfg, cap)
@@ -434,6 +440,9 @@ def GetPoseS(cfg, dlc_cfg, sess, inputs, outputs, cap, nframes):
             pbar.update(step)
 
         ret, frame = cap.read()
+        if flip_video:
+            frame = cv2.flip(frame, 0)
+
         if ret:
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             if cfg["cropping"]:
@@ -456,7 +465,7 @@ def GetPoseS(cfg, dlc_cfg, sess, inputs, outputs, cap, nframes):
     return PredictedData, nframes
 
 
-def GetPoseS_GTF(cfg, dlc_cfg, sess, inputs, outputs, cap, nframes):
+def GetPoseS_GTF(cfg, dlc_cfg, sess, inputs, outputs, cap, nframes, flip_video=False):
     """ Non batch wise pose estimation for video cap."""
     if cfg["cropping"]:
         ny, nx = checkcropping(cfg, cap)
@@ -473,6 +482,10 @@ def GetPoseS_GTF(cfg, dlc_cfg, sess, inputs, outputs, cap, nframes):
             pbar.update(step)
 
         ret, frame = cap.read()
+
+        if flip_video:
+            frame = cv2.flip(frame, 0)
+
         if ret:
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             if cfg["cropping"]:
@@ -501,7 +514,7 @@ def GetPoseS_GTF(cfg, dlc_cfg, sess, inputs, outputs, cap, nframes):
     return PredictedData, nframes
 
 
-def GetPoseF_GTF(cfg, dlc_cfg, sess, inputs, outputs, cap, nframes, batchsize):
+def GetPoseF_GTF(cfg, dlc_cfg, sess, inputs, outputs, cap, nframes, batchsize, flip_video=False):
     """ Batchwise prediction of pose """
     PredictedData = np.zeros((nframes, 3 * len(dlc_cfg["all_joints_names"])))
     batch_ind = 0  # keeps track of which image within a batch should be written to
@@ -524,6 +537,10 @@ def GetPoseF_GTF(cfg, dlc_cfg, sess, inputs, outputs, cap, nframes, batchsize):
         if counter % step == 0:
             pbar.update(step)
         ret, frame = cap.read()
+
+        if flip_video:
+            frame = cv2.flip(frame, 0)
+
         if ret:
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             if cfg["cropping"]:
@@ -571,7 +588,7 @@ def getboundingbox(x, y, nx, ny, margin):
 
 
 def GetPoseDynamic(
-    cfg, dlc_cfg, sess, inputs, outputs, cap, nframes, detectiontreshold, margin
+    cfg, dlc_cfg, sess, inputs, outputs, cap, nframes, detectiontreshold, margin, flip_video=False
 ):
     """ Non batch wise pose estimation for video cap by dynamically cropping around previously detected parts."""
     if cfg["cropping"]:
@@ -591,6 +608,8 @@ def GetPoseDynamic(
             pbar.update(step)
 
         ret, frame = cap.read()
+        if flip_video:
+            frame = cv2.flip(frame, 0)
         if ret:
             # print(counter,x1,x2,y1,y2,detected)
             originalframe = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -655,6 +674,7 @@ def AnalyzeVideo(
     save_as_csv,
     destfolder=None,
     TFGPUinference=True,
+    flip_video=flip_video,
     dynamic=(False, 0.5, 10),
 ):
     """ Helper function for analyzing a video. """
@@ -710,6 +730,7 @@ def AnalyzeVideo(
                 nframes,
                 detectiontreshold,
                 margin,
+                flip_video=flip_video,
             )
             # GetPoseF_GTF(cfg,dlc_cfg, sess, inputs, outputs,cap,nframes,int(dlc_cfg["batch_size"]))
         else:
@@ -724,6 +745,7 @@ def AnalyzeVideo(
                         cap,
                         nframes,
                         int(dlc_cfg["batch_size"]),
+                        flip_video=flip_video,
                     )
                 else:
                     PredictedData, nframes = GetPoseF(
@@ -735,15 +757,16 @@ def AnalyzeVideo(
                         cap,
                         nframes,
                         int(dlc_cfg["batch_size"]),
+                        flip_video = flip_video,
                     )
             else:
                 if TFGPUinference:
                     PredictedData, nframes = GetPoseS_GTF(
-                        cfg, dlc_cfg, sess, inputs, outputs, cap, nframes
+                        cfg, dlc_cfg, sess, inputs, outputs, cap, nframes,flip_video=flip_video
                     )
                 else:
                     PredictedData, nframes = GetPoseS(
-                        cfg, dlc_cfg, sess, inputs, outputs, cap, nframes
+                        cfg, dlc_cfg, sess, inputs, outputs, cap, nframes, flip_video=flip_video
                     )
 
         stop = time.time()

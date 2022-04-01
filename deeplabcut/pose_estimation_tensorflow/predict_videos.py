@@ -319,7 +319,7 @@ def analyze_videos(
                     destfolder,
                     TFGPUinference,
                     dynamic,
-                    flip_video=flip_video,
+                    flip_video,
                 )
 
         os.chdir(str(start_path))
@@ -674,7 +674,7 @@ def AnalyzeVideo(
     save_as_csv,
     destfolder=None,
     TFGPUinference=True,
-    flip_video=flip_video,
+    flip_video=False,
     dynamic=(False, 0.5, 10),
 ):
     """ Helper function for analyzing a video. """
@@ -730,7 +730,7 @@ def AnalyzeVideo(
                 nframes,
                 detectiontreshold,
                 margin,
-                flip_video=flip_video,
+                flip_video,
             )
             # GetPoseF_GTF(cfg,dlc_cfg, sess, inputs, outputs,cap,nframes,int(dlc_cfg["batch_size"]))
         else:
@@ -745,7 +745,7 @@ def AnalyzeVideo(
                         cap,
                         nframes,
                         int(dlc_cfg["batch_size"]),
-                        flip_video=flip_video,
+                        flip_video,
                     )
                 else:
                     PredictedData, nframes = GetPoseF(
@@ -757,16 +757,16 @@ def AnalyzeVideo(
                         cap,
                         nframes,
                         int(dlc_cfg["batch_size"]),
-                        flip_video = flip_video,
+                        flip_video,
                     )
             else:
                 if TFGPUinference:
                     PredictedData, nframes = GetPoseS_GTF(
-                        cfg, dlc_cfg, sess, inputs, outputs, cap, nframes,flip_video=flip_video
+                        cfg, dlc_cfg, sess, inputs, outputs, cap, nframes,flip_video
                     )
                 else:
                     PredictedData, nframes = GetPoseS(
-                        cfg, dlc_cfg, sess, inputs, outputs, cap, nframes, flip_video=flip_video
+                        cfg, dlc_cfg, sess, inputs, outputs, cap, nframes, flip_video
                     )
 
         stop = time.time()

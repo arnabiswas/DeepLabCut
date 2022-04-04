@@ -316,10 +316,10 @@ def analyze_videos(
                     outputs,
                     pdindex,
                     save_as_csv,
+                    flip_video,                    
                     destfolder,
                     TFGPUinference,
                     dynamic,
-                    flip_video,
                 )
 
         os.chdir(str(start_path))
@@ -368,7 +368,7 @@ def checkcropping(cfg, cap):
     return int(ny), int(nx)
 
 
-def GetPoseF(cfg, dlc_cfg, sess, inputs, outputs, cap, nframes, batchsize, flip_video=False):
+def GetPoseF(cfg, dlc_cfg, sess, inputs, outputs, cap, nframes, batchsize, flip_video):
     """ Batchwise prediction of pose """
     PredictedData = np.zeros(
         (nframes, dlc_cfg["num_outputs"] * 3 * len(dlc_cfg["all_joints_names"]))
@@ -424,7 +424,7 @@ def GetPoseF(cfg, dlc_cfg, sess, inputs, outputs, cap, nframes, batchsize, flip_
     return PredictedData, nframes
 
 
-def GetPoseS(cfg, dlc_cfg, sess, inputs, outputs, cap, nframes, flip_video=False):
+def GetPoseS(cfg, dlc_cfg, sess, inputs, outputs, cap, nframes, flip_video):
     """ Non batch wise pose estimation for video cap."""
     if cfg["cropping"]:
         ny, nx = checkcropping(cfg, cap)
@@ -465,7 +465,7 @@ def GetPoseS(cfg, dlc_cfg, sess, inputs, outputs, cap, nframes, flip_video=False
     return PredictedData, nframes
 
 
-def GetPoseS_GTF(cfg, dlc_cfg, sess, inputs, outputs, cap, nframes, flip_video=False):
+def GetPoseS_GTF(cfg, dlc_cfg, sess, inputs, outputs, cap, nframes, flip_video):
     """ Non batch wise pose estimation for video cap."""
     if cfg["cropping"]:
         ny, nx = checkcropping(cfg, cap)
@@ -514,7 +514,7 @@ def GetPoseS_GTF(cfg, dlc_cfg, sess, inputs, outputs, cap, nframes, flip_video=F
     return PredictedData, nframes
 
 
-def GetPoseF_GTF(cfg, dlc_cfg, sess, inputs, outputs, cap, nframes, batchsize, flip_video=False):
+def GetPoseF_GTF(cfg, dlc_cfg, sess, inputs, outputs, cap, nframes, batchsize, flip_video):
     """ Batchwise prediction of pose """
     PredictedData = np.zeros((nframes, 3 * len(dlc_cfg["all_joints_names"])))
     batch_ind = 0  # keeps track of which image within a batch should be written to
@@ -588,8 +588,7 @@ def getboundingbox(x, y, nx, ny, margin):
 
 
 def GetPoseDynamic(
-    cfg, dlc_cfg, sess, inputs, outputs, cap, nframes, detectiontreshold, margin, flip_video=False
-):
+    cfg, dlc_cfg, sess, inputs, outputs, cap, nframes, detectiontreshold, margin, flip_video):
     """ Non batch wise pose estimation for video cap by dynamically cropping around previously detected parts."""
     if cfg["cropping"]:
         ny, nx = checkcropping(cfg, cap)
@@ -672,9 +671,9 @@ def AnalyzeVideo(
     outputs,
     pdindex,
     save_as_csv,
+    flip_video,
     destfolder=None,
     TFGPUinference=True,
-    flip_video=False,
     dynamic=(False, 0.5, 10),
 ):
     """ Helper function for analyzing a video. """

@@ -26,4 +26,4 @@ dependencies:
   - Shapely
   - pip:
     - tensorflow-gpu==1.15.5
-    - deeplabcut
+    - deeplabcut==2.1.10.4
